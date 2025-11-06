@@ -1,9 +1,10 @@
 import type { PageLoad } from './$types';
 import { images } from '$lib/scripts/assets';
+import type { FullPageData } from '$lib';
 
 //TODO: set page icon to correct one
 export const load: PageLoad = ({ params }) => {
-    return {
+    let data: FullPageData = {
         title: `SCIENCE`,
         icon: images.pedia.home.science,
 
@@ -39,5 +40,6 @@ export const load: PageLoad = ({ params }) => {
                 info: "Decorations are a class of Slime Science gadgets that allow you to decorate the world with attractive objects or recreations of natural findings from the environment.\n\nCraft decorations in order to make your slime ranching a more beautiful experience.",
             },
         ],
-    }
+    };
+    return data;
 }

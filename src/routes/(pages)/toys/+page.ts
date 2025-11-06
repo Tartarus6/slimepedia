@@ -4,7 +4,7 @@ import { toys } from '$lib/data/toys';
 import type { FullPageData } from '$lib';
 
 export const load: PageLoad = ({ params }) => {
-    let fullPageData: FullPageData = {
+    let data: FullPageData = {
         title: `TOYS`,
         icon: images.pedia.home.toys,
         categories: [
@@ -13,5 +13,5 @@ export const load: PageLoad = ({ params }) => {
         ],
         content: toys
     };
-    return fullPageData
+    return data
 };

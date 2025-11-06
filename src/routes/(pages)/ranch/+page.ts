@@ -1,9 +1,10 @@
 import type { PageLoad } from './$types';
 import { images } from '$lib/scripts/assets';
+import type { FullPageData } from '$lib';
 
 //TODO: set page icon to correct one
 export const load: PageLoad = ({ params }) => {
-    return {
+    let data: FullPageData = {
         title: `RANCH`,
         icon: images.pedia.home.ranch,
 
@@ -81,5 +82,6 @@ export const load: PageLoad = ({ params }) => {
                 info: "The plort market is a network of buyers and sellers of plorts across the galaxy. Ranchers use plort market machines on their ranch to send plorts to the market for sale. Ranchers are paid immediately when depositing plorts at the plort's current market value.\n\nPlort market values fluctuate and some of the more savvy ranchers will hoard certain plorts for days when sale prices are high, especially rare plorts.",
             },
         ],
-    }
+    };
+    return data
 }

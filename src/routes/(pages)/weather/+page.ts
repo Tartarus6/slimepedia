@@ -1,9 +1,10 @@
 import type { PageLoad } from './$types';
 import { images } from '$lib/scripts/assets';
+import type { FullPageData } from '$lib';
 
 //TODO: set page icon to correct one
 export const load: PageLoad = ({ params }) => {
-    return {
+    let data: FullPageData = {
         title: `WEATHER`,
         icon: images.pedia.home.weather,
 
@@ -63,5 +64,6 @@ export const load: PageLoad = ({ params }) => {
                 info: "Even by the standards of Rainbow Island, slimefall is an unusual sight, with dozens of slimes raining down from the clouds above. As with many things, the slimes don't seem to be particularly bothered by it all, but a rancher would do well to remain cautious. With so many new slimes dropped into an area at once, slimefall can easily lead to Tarr outbreaks.",
             },
         ],
-    }
+    };
+    return data;
 }

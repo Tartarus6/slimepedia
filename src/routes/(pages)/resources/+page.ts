@@ -6,7 +6,7 @@ import type { FullPageData } from '$lib';
 //TODO: fill in 'favored by' fields
 
 export const load: PageLoad = ({ params }) => {
-    let fullPageData: FullPageData = {
+    let data: FullPageData = {
         title: `RESOURCES`,
         icon: images.pedia.home.resources,
         categories: [
@@ -15,5 +15,5 @@ export const load: PageLoad = ({ params }) => {
         ],
         content: resources,
     };
-    return fullPageData
+    return data
 };

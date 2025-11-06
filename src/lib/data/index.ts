@@ -9,7 +9,7 @@ export type ItemsData = {
         value: string,
         icon: Picture,
     }[],
-    info: {
+    info: string | {
         icon: Picture,
         title: string,
         content: string,
