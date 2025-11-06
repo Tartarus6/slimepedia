@@ -63,8 +63,28 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
+          # Setup SSH with proper port defaulting
+          SSH_PORT=${SSH_PORT:-22}
+          
+          # Debug output (will mask secrets automatically)
+          echo "Connecting to: $SSH_USER@$SSH_HOST:$SSH_PORT"
+          
+          # Validate required variables
+          if [ -z "$SSH_HOST" ]; then
+            echo "Error: SSH_HOST is not set"
+            exit 1
+          fi
+          if [ -z "$SSH_USER" ]; then
+            echo "Error: SSH_USER is not set"
+            exit 1
+          fi
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "Error: SSH_PRIVATE_KEY is not set"
+            exit 1
+          fi
+          
           # Setup SSH
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
