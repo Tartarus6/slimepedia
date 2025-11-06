@@ -53,6 +53,7 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    environment: Beegsorvor
     
     steps:
       - name: Checkout code
