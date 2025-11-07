@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build and Push Docker Image
 
 on:
   push:
@@ -50,53 +50,14 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    environment: Beegsorvor
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
+      - name: Image published
         run: |
-          # Setup SSH with proper port defaulting
-          SSH_PORT=${SSH_PORT:-22}
-          
-          # Debug output (will mask secrets automatically)
-          echo "Connecting to: $SSH_USER@$SSH_HOST:$SSH_PORT"
-          
-          # Validate required variables
-          if [ -z "$SSH_HOST" ]; then
-            echo "Error: SSH_HOST is not set"
-            exit 1
-          fi
-          if [ -z "$SSH_USER" ]; then
-            echo "Error: SSH_USER is not set"
-            exit 1
-          fi
-          if [ -z "$SSH_PRIVATE_KEY" ]; then
-            echo "Error: SSH_PRIVATE_KEY is not set"
-            exit 1
-          fi
-          
-          # Setup SSH
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p $SSH_PORT -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
-          
-          # Copy deployment script to server
-          scp -i ~/.ssh/deploy_key -P $SSH_PORT ./scripts/deploy.sh $SSH_USER@$SSH_HOST:/tmp/slimepedia-deploy.sh
-          
-          # Execute deployment on server
-          ssh -i ~/.ssh/deploy_key -p $SSH_PORT $SSH_USER@$SSH_HOST "bash /tmp/slimepedia-deploy.sh"
-          
-          # Cleanup
-          rm ~/.ssh/deploy_key
+          echo "✅ Docker image published successfully!"
+          echo "📦 Image: ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
+          echo ""
+          echo "To update on your server, run:"
+          echo "  bash scripts/server-update.sh"
+          echo "or"
+          echo "  docker pull ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
+          echo "  docker stop slimepedia && docker rm slimepedia"
+          echo "  docker run -d --name slimepedia --restart unless-stopped -p 3000:3000 ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:latest"

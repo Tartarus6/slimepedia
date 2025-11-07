@@ -1,56 +1,27 @@
 # Slimepedia Deployment Guide
 
-This guide explains how to deploy Slimepedia to your server using the automated pipeline.
+This guide explains how to build and deploy Slimepedia using Docker containers.
 
 ## Overview
 
-The deployment pipeline consists of:
-1. **GitHub Actions Workflow** - Automatically builds and pushes Docker images
-2. **Server Deployment Script** - Updates the running container on your server
-3. **Docker Compose** - Alternative deployment method for easier management
+Slimepedia uses a simple deployment pipeline:
 
-## Quick Setup
+1. **GitHub Actions** - Automatically builds Docker images and publishes them to GitHub Container Registry (GHCR)
+2. **Docker Deployment** - Pull and run the pre-built images on your server, or build locally for development
 
-### 1. Configure GitHub Secrets
+The GitHub Actions workflow builds multi-platform images (linux/amd64, linux/arm64) and publishes them with automatic tags:
+- `latest` - Latest build from the main branch
+- `main` - Current main branch build
+- `main-<sha>` - Specific commit builds for version pinning
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions
+## Using GitHub Container Registry (Production)
 
-Add the following secrets:
+### 1. Automatic Image Building
 
-- `SSH_PRIVATE_KEY` - Your SSH private key for server access
-- `SSH_HOST` - Your server's hostname or IP address
-- `SSH_USER` - SSH username (e.g., `root` or your user)
-- `SSH_PORT` - SSH port (optional, defaults to 22)
-
-### 2. Set up GitHub Container Registry on Server
-
-On your server, run this once to authenticate with GitHub Container Registry:
-
-```bash
-# Create a GitHub Personal Access Token with read:packages permission
-# Go to: GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-# Create token with 'read:packages' scope
-
-echo YOUR_GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
-```
-
-### 3. Make scripts executable
-
-```bash
-chmod +x scripts/deploy.sh
-chmod +x scripts/local-deploy.sh
-```
-
-## Deployment Methods
-
-### Method 1: Automatic Deployment (Recommended)
-
-Push to the `main` branch, and GitHub Actions will automatically:
-1. Build the Docker image
-2. Push it to GitHub Container Registry
-3. SSH into your server
-4. Pull the latest image
-5. Restart the container
+When you push to the `main` branch, GitHub Actions automatically:
+1. Builds the Docker image using the multi-stage Dockerfile
+2. Publishes it to GitHub Container Registry at `ghcr.io/tartarus6/slimepedia/slimepedia`
+3. Tags it with `latest`, `main`, and `main-<commit-sha>`
 
 ```bash
 git add .
@@ -58,68 +29,171 @@ git commit -m "Update application"
 git push origin main
 ```
 
-### Method 2: Using Docker Compose
+The workflow will build and publish the image. Check the Actions tab on GitHub to monitor progress.
 
-Copy `docker-compose.yml` to your server and run:
+### 2. Pulling from GitHub Container Registry
+
+The published images are **public** and can be pulled by anyone without authentication.
+
+To pull the latest image:
 
 ```bash
-# First time setup
-docker-compose up -d
+docker pull ghcr.io/tartarus6/slimepedia/slimepedia:latest
+```
 
-# Update to latest version
+To pull a specific version:
+
+```bash
+# Use the commit SHA for a specific version
+docker pull ghcr.io/tartarus6/slimepedia/slimepedia:main-abc1234
+```
+
+### 3. Deploying with Docker Compose (Recommended)
+
+The easiest way to deploy is using Docker Compose. It handles container management and restarts automatically.
+
+**Step 1:** Copy `docker-compose.yml` to your server (or clone the repository)
+
+**Step 2:** Start the container:
+
+```bash
+docker-compose up -d
+```
+
+**Step 3:** To update to the latest version:
+
+```bash
 docker-compose pull
 docker-compose up -d
 ```
 
-### Method 3: Manual Deployment Script
+The compose file automatically pulls from GHCR and manages the container lifecycle.
 
-On your server, run the deployment script manually:
+### 4. Deploying with Docker CLI
+
+If you prefer manual control, you can use Docker commands directly:
 
 ```bash
-bash /path/to/slimepedia/scripts/deploy.sh
+# Pull the latest image
+docker pull ghcr.io/tartarus6/slimepedia/slimepedia:latest
+
+# Stop and remove old container (if exists)
+docker stop slimepedia 2>/dev/null || true
+docker rm slimepedia 2>/dev/null || true
+
+# Run the new container
+docker run -d \
+  --name slimepedia \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  ghcr.io/tartarus6/slimepedia/slimepedia:latest
 ```
 
-Or update the script directly on the server:
+### 5. Using the Server Update Script
+
+For convenience, you can use the provided update script on your server:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Tartarus6/slimepedia/main/scripts/deploy.sh | bash
+bash scripts/server-update.sh
 ```
 
-### Method 4: Local Testing
+This script handles pulling the latest image, stopping the old container, and starting a new one.
 
-Build and run locally:
+## Building and Running Locally
+
+If you want to build and run the container locally (without using GitHub Container Registry):
+
+### 1. Build the Docker Image
 
 ```bash
-./scripts/local-deploy.sh
+docker build -t slimepedia:local .
+```
+
+This uses the multi-stage Dockerfile to:
+1. Install dependencies and build the SvelteKit application
+2. Create a minimal production image with only the built files and production dependencies
+
+### 2. Run the Container
+
+```bash
+docker run -d \
+  --name slimepedia \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  slimepedia:local
+```
+
+### 3. Using Docker Compose for Local Development
+
+Create a `docker-compose.dev.yml` file:
+
+```yaml
+version: '3.8'
+
+services:
+  slimepedia:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slimepedia-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+```
+
+Then run:
+
+```bash
+docker-compose -f docker-compose.dev.yml up -d --build
 ```
 
 ## Configuration
 
-### Change Port
+### Changing the Port
 
-Edit the `HOST_PORT` in `scripts/deploy.sh` or the port mapping in `docker-compose.yml`:
+Edit the port mapping in `docker-compose.yml` or your docker run command:
 
 ```yaml
 ports:
-  - "8080:3000"  # Change 8080 to your desired port
+  - "8080:3000"  # Change 8080 to your desired host port
+```
+
+Or with Docker CLI:
+
+```bash
+docker run -d -p 8080:3000 ... ghcr.io/tartarus6/slimepedia/slimepedia:latest
 ```
 
 ### Environment Variables
 
-Add environment variables in `docker-compose.yml` or `scripts/deploy.sh`:
+Add environment variables in `docker-compose.yml`:
 
 ```yaml
 environment:
   - NODE_ENV=production
-  - CUSTOM_VAR=value
+  - YOUR_VAR=value
 ```
 
-## Monitoring
+Or with Docker CLI:
+
+```bash
+docker run -d -e YOUR_VAR=value ... ghcr.io/tartarus6/slimepedia/slimepedia:latest
+```
+
+## Monitoring and Management
 
 ### View Container Logs
 
 ```bash
+# Follow logs in real-time
 docker logs -f slimepedia
+
+# View last 100 lines
+docker logs --tail 100 slimepedia
 ```
 
 ### Check Container Status
@@ -128,63 +202,207 @@ docker logs -f slimepedia
 docker ps --filter name=slimepedia
 ```
 
+### Check Health Status
+
+```bash
+docker inspect slimepedia --format='{{.State.Health.Status}}'
+```
+
 ### Restart Container
 
 ```bash
 docker restart slimepedia
 ```
 
+### Stop and Remove Container
+
+```bash
+docker stop slimepedia
+docker rm slimepedia
+```
+
 ## Troubleshooting
 
-### Container won't start
+### Container Won't Start
 
-Check logs:
+Check the logs for errors:
+
 ```bash
 docker logs slimepedia
 ```
 
-### Permission denied on SSH
+Verify the image was pulled correctly:
 
-Make sure your SSH key is properly formatted and has correct permissions:
 ```bash
-chmod 600 ~/.ssh/deploy_key
+docker images | grep slimepedia
 ```
 
-### Image pull fails
+### Port Already in Use
 
-Verify GitHub Container Registry authentication:
+Check what's using port 3000:
+
 ```bash
-docker login ghcr.io
+sudo lsof -i :3000
 ```
 
-### Port already in use
+Change the host port in your deployment configuration.
 
-Change the `HOST_PORT` in your deployment configuration.
+### Image Pull Issues
 
-## Rollback
-
-To rollback to a previous version:
+If you have trouble pulling from GHCR, verify the image exists:
 
 ```bash
-# List available tags
-docker images ghcr.io/tartarus6/slimepedia/slimepedia
+# List available tags on GitHub
+# Visit: https://github.com/Tartarus6/slimepedia/pkgs/container/slimepedia%2Fslimepedia
+```
 
-# Use a specific version
+### Health Check Failing
+
+The container includes a health check that pings `http://localhost:3000`. If it fails:
+
+1. Check if the application started correctly: `docker logs slimepedia`
+2. Verify the port is accessible: `curl http://localhost:3000`
+3. Check if the container is running: `docker ps -a | grep slimepedia`
+
+## Version Pinning and Rollback
+
+### Using Specific Versions
+
+Pin to a specific commit for reproducible deployments:
+
+```bash
+# Use a specific commit SHA
+docker pull ghcr.io/tartarus6/slimepedia/slimepedia:main-abc1234
+```
+
+Update `docker-compose.yml` to pin a version:
+
+```yaml
+services:
+  slimepedia:
+    image: ghcr.io/tartarus6/slimepedia/slimepedia:main-abc1234  # Pin to specific version
+```
+
+### Rollback to Previous Version
+
+```bash
+# Stop current container
 docker stop slimepedia
 docker rm slimepedia
-docker run -d --name slimepedia -p 3000:3000 ghcr.io/tartarus6/slimepedia/slimepedia:main-abc123
+
+# Run a previous version
+docker run -d \
+  --name slimepedia \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  ghcr.io/tartarus6/slimepedia/slimepedia:main-abc1234
 ```
 
-## Security Notes
+Or with Docker Compose, change the tag in `docker-compose.yml` and run:
 
-- Keep your SSH private key secure
-- Use a dedicated deploy user with limited permissions
-- Consider using a reverse proxy (nginx/Caddy) for HTTPS
-- Regularly update the base Docker image
+```bash
+docker-compose up -d
+```
 
-## Next Steps
+## GitHub Container Registry Details
 
-1. Set up a reverse proxy (nginx/Caddy) for HTTPS
-2. Configure a domain name
-3. Set up monitoring (e.g., Uptime Kuma, Netdata)
-4. Configure automated backups if needed
+### Image Naming
+
+The image is published to:
+```
+ghcr.io/tartarus6/slimepedia/slimepedia
+```
+
+This follows the format:
+```
+ghcr.io/<owner>/<repository>/<image-name>
+```
+
+### Available Tags
+
+- `latest` - The most recent build from the main branch
+- `main` - Same as latest, but explicitly from main branch
+- `main-<commit-sha>` - Specific commit builds (e.g., `main-abc1234`)
+
+### Package Visibility
+
+The package is set to **public** visibility, so no authentication is required to pull images. You can view available versions at:
+```
+https://github.com/Tartarus6/slimepedia/pkgs/container/slimepedia%2Fslimepedia
+```
+
+## Production Best Practices
+
+### Use a Reverse Proxy
+
+Put the container behind a reverse proxy for HTTPS and additional features:
+
+**Nginx example:**
+
+```nginx
+server {
+    listen 80;
+    server_name slimepedia.example.com;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+**Caddy example:**
+
+```
+slimepedia.example.com {
+    reverse_proxy localhost:3000
+}
+```
+
+### Set Up Automatic Updates
+
+Create a cron job to automatically pull and restart:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add this line to check for updates daily at 3 AM
+0 3 * * * cd /path/to/slimepedia && docker-compose pull && docker-compose up -d
+```
+
+### Monitor Resources
+
+Monitor container resource usage:
+
+```bash
+docker stats slimepedia
+```
+
+### Implement Logging
+
+Set up log rotation to prevent disk space issues:
+
+```yaml
+services:
+  slimepedia:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+## Development Workflow
+
+1. Make changes to the code locally
+2. Test locally using `npm run dev`
+3. Commit and push to main branch
+4. GitHub Actions builds and publishes the Docker image
+5. Pull and deploy the new image on your server
+
+This workflow keeps development fast (no need to build Docker images locally) while ensuring production deployments are consistent and reproducible.
