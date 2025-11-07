@@ -6,6 +6,7 @@
 
 	let count = $state(0);
 
+	// svelte-ignore state_referenced_locally
 	let selected = $state(Array.from({ length: size * size }, (_, index) => 1));
 
 	let showDiags = $state(0);
