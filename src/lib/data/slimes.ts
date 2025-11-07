@@ -545,7 +545,6 @@ export const slimes: ItemsData = [
 	{
 		name: 'lucky slime',
 		image: images.slimes.lucky,
-		plort_image: images.miscIcons.unavailable,
 		blurb: 'Oooh, shiny! 	',
 		facts: [
 			{
