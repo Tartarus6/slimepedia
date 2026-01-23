@@ -9,9 +9,10 @@ export type ItemsData = {
         value: string,
         icon: Picture,
     }[],
-    info: string | {
+    info?: {
         icon: Picture,
         title: string,
         content: string,
     }[],
+    text?: string,
 }[]

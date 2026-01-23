@@ -89,7 +89,7 @@
 	<!-- item info -->
 	<ScrollableComponent class="pt-4" reactiveValue={selectedIndex}>
 		<span>
-			<span class="whitespace-pre-wrap text-[1.1em]">{selectedItem.info}</span>
+			<span class="whitespace-pre-wrap text-[1.1em]">{selectedItem.text}</span>
 		</span>
 	</ScrollableComponent>
 

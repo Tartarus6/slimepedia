@@ -7,7 +7,6 @@
 	import { goto } from '$app/navigation';
 	import { getNavigateIndex, navigationKeys } from '$lib/scripts/utils';
 	import TitleComponent from '$lib/components/TitleComponent.svelte';
-	// import ButtonComponent from '$lib/components/ButtonComponent.svelte';
 
 	const cols = 3; // number of columns in the grid
 
@@ -135,18 +134,12 @@
 	</div>
 
 	<div class="z-10 col-start-1 row-start-1 mx-36 my-10">
-		<div
-			class="col-start-1 row-start-1 grid h-full grid-cols-{cols} grid-rows-3 items-center justify-items-center"
-		>
+		<div class="col-start-1 row-start-1 grid h-full grid-cols-{cols} grid-rows-3 items-center justify-items-center">
 			{#each data.content as button, i}
 				<a href={button.link} class="size-40" data-sveltekit-preload-data="hover" onclick={() => {soundManager.playClick2()}} onmouseenter={() => {soundManager.playRollover(); selectedIndex = i; selectedItem = button;}} onmouseleave={() => {savedSelectedIndex = selectedIndex; selectedIndex = -1; selectedItem = undefined;}}>
 					<div class="group h-fit w-fit">
-						<div
-							class="grid h-full w-full justify-items-center transition-transform duration-200 ease-[cubic-bezier(.53,1.79,.58,1.05)] {selectedItem && selectedItem.name === button.name ? 'scale-[1.2]' : ''}"
-						>
-							<div
-								class="relative aspect-square scale-100 rounded-main border-[0.45em] p-3 {selectedItem && selectedItem.name === button.name ? 'border-lightish-blue bg-light-blue' : 'border-transparent bg-lightish-beige'}"
-							>
+						<div class="grid h-full w-full justify-items-center transition-transform duration-200 ease-[cubic-bezier(.53,1.79,.58,1.05)] {selectedItem && selectedItem.name === button.name ? 'scale-[1.2]' : ''}">
+							<div class="relative aspect-square scale-100 rounded-main border-[0.45em] p-3 {selectedItem && selectedItem.name === button.name ? 'border-lightish-blue bg-light-blue' : 'border-transparent bg-lightish-beige'}">
 								<enhanced:img
 									src={button.image}
 									alt="slime icon"
