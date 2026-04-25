@@ -10,13 +10,13 @@
 
 	const cols = 3; // number of columns in the grid
 
-	let {data}: {data: HomePageData} = $props();
+	let { data }: { data: HomePageData } = $props();
 
 	// selected item for keyboard navigation
 	let selectedIndex = $state(-1);
 	// svelte-ignore state_referenced_locally
 	let savedSelectedIndex = $state(selectedIndex);
-	let selectedItem : HomeContentItem | undefined = $state(undefined);
+	let selectedItem: HomeContentItem | undefined = $state(undefined);
 
 	let timeIcon = $state(images.pedia.timeSun);
 	let time = $state('');
@@ -26,7 +26,7 @@
 	// update time every minute
 	$effect(() => {
 		const now = new Date();
-		const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 10;  // +10 just to reduce the chance of checking before the minute changes
+		const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 10; // +10 just to reduce the chance of checking before the minute changes
 
 		const initialTimeout = setTimeout(() => {
 			updateTime();
@@ -45,7 +45,7 @@
 		const d = new Date();
 		let hours = d.getHours();
 		let minutes = d.getMinutes();
-		time = hours + ':' + minutes.toString().padStart(2, '0')
+		time = hours + ':' + minutes.toString().padStart(2, '0');
 
 		if ((hours == 19 && minutes >= 12) || hours > 19) {
 			timeIcon = images.pedia.timeMoon;
@@ -68,11 +68,15 @@
 				window.removeEventListener('keydown', handleNavigateKeydown);
 			}
 		};
-	})
+	});
 
 	function handleNavigateKeydown(event: KeyboardEvent) {
 		// returning to previously selected item
-		if (navigationKeys.up.concat(navigationKeys.down, navigationKeys.left, navigationKeys.right).includes(event.key)) {
+		if (
+			navigationKeys.up
+				.concat(navigationKeys.down, navigationKeys.left, navigationKeys.right)
+				.includes(event.key)
+		) {
 			if (selectedIndex === -1 && savedSelectedIndex !== -1) {
 				event.preventDefault();
 				selectedIndex = savedSelectedIndex;
@@ -102,20 +106,16 @@
 	}
 </script>
 
-<div class="grid h-full grid-cols-1 grid-rows-1 overflow-hidden col-start-1 row-start-1">
+<div class="col-start-1 row-start-1 grid h-full grid-cols-1 grid-rows-1 overflow-hidden">
 	<!-- top bar-->
 	<div class="z-10 col-start-1 row-start-1 grid h-fit grid-cols-2 grid-rows-1">
 		<TitleComponent icon={data.icon} title={data.title}></TitleComponent>
 		<div class="flex gap-8 place-self-end">
-			<span class="text-xl text-blueblack" style="font-family: Hemisphers;">
-				<enhanced:img
-					src={timeIcon}
-					alt="time icon"
-					class="inline-block size-5 align-sub"
-				/>
+			<span class="text-blueblack text-xl" style="font-family: Hemisphers;">
+				<enhanced:img src={timeIcon} alt="time icon" class="inline-block size-5 align-sub" />
 				{time}
 			</span>
-			<span class="text-xl text-blueblack" style="font-family: Hemisphers;">
+			<span class="text-blueblack text-xl" style="font-family: Hemisphers;">
 				<enhanced:img
 					src={images.miscIcons.newbuck}
 					alt="coins icon"
@@ -134,22 +134,63 @@
 	</div>
 
 	<div class="z-10 col-start-1 row-start-1 mx-36 my-10">
-		<div class="col-start-1 row-start-1 grid h-full grid-cols-{cols} grid-rows-3 items-center justify-items-center">
+		<div
+			class="col-start-1 row-start-1 grid h-full grid-cols-{cols} grid-rows-3 items-center justify-items-center"
+		>
 			{#each data.content as button, i}
-				<a href={button.link} class="size-40" data-sveltekit-preload-data="hover" onclick={() => {soundManager.playClick2()}} onmouseenter={() => {soundManager.playRollover(); selectedIndex = i; selectedItem = button;}} onmouseleave={() => {savedSelectedIndex = selectedIndex; selectedIndex = -1; selectedItem = undefined;}}>
+				<a
+					href={button.link}
+					class="size-40"
+					data-sveltekit-preload-data="hover"
+					onclick={() => {
+						soundManager.playClick2();
+					}}
+					onmouseenter={() => {
+						soundManager.playRollover();
+						selectedIndex = i;
+						selectedItem = button;
+					}}
+					onmouseleave={() => {
+						savedSelectedIndex = selectedIndex;
+						selectedIndex = -1;
+						selectedItem = undefined;
+					}}
+				>
 					<div class="group h-fit w-fit">
-						<div class="grid h-full w-full justify-items-center transition-transform duration-200 ease-[cubic-bezier(.53,1.79,.58,1.05)] {selectedItem && selectedItem.name === button.name ? 'scale-[1.2]' : ''}">
-							<div class="relative aspect-square scale-100 rounded-main border-[0.45em] p-3 {selectedItem && selectedItem.name === button.name ? 'border-lightish-blue bg-light-blue' : 'border-transparent bg-lightish-beige'}">
+						<div
+							class="grid h-full w-full justify-items-center transition-transform duration-200 ease-[cubic-bezier(.53,1.79,.58,1.05)] {selectedItem &&
+							selectedItem.name === button.name
+								? 'scale-[1.2]'
+								: ''}"
+						>
+							<div
+								class="rounded-main relative aspect-square scale-100 border-[0.45em] p-3 {selectedItem &&
+								selectedItem.name === button.name
+									? 'border-lightish-blue bg-light-blue'
+									: 'bg-lightish-beige border-transparent'}"
+							>
 								<enhanced:img
 									src={button.image}
 									alt="slime icon"
-									class="transition-transform {selectedItem && selectedItem.name === button.name ? 'animate-wiggle' : ''}"
+									class="transition-transform {selectedItem && selectedItem.name === button.name
+										? 'animate-wiggle'
+										: ''}"
 								/>
 							</div>
-							<div class="mt-1 min-w-full rounded-full px-4 text-center {selectedItem && selectedItem.name === button.name ? 'bg-dark-pink' : ''}">
+
+							<!-- ?Note: `translate-z-0` in the selected item name below is in order to prevent weird compositing issues that can sometimes lead to small artifacts -->
+							<div
+								class="mt-1 min-w-full translate-z-0 rounded-full px-4 text-center {selectedItem &&
+								selectedItem.name === button.name
+									? 'bg-dark-pink'
+									: ''}"
+							>
 								<div class="translate-y-[0.075em]">
 									<span
-										class="text-3xl font-bold translate-y-20 {selectedItem && selectedItem.name === button.name ? 'text-white!' : ''}"
+										class="translate-y-20 text-3xl font-bold {selectedItem &&
+										selectedItem.name === button.name
+											? 'text-white!'
+											: ''}"
 										style="font-family: Lexend; letter-spacing: 0em;"
 									>
 										{button.name}
@@ -165,12 +206,12 @@
 </div>
 
 <div class="col-start-1 row-start-2 place-self-end">
-    <div class="inline-flex h-9 w-full place-content-end">
-		<div class="h-full content-center justify-center rounded-xl border-4 border-white bg-bluegray">
+	<div class="inline-flex h-9 w-full place-content-end">
+		<div class="bg-bluegray h-full content-center justify-center rounded-xl border-4 border-white">
 			<enhanced:img src={images.input.keyboard.space} class="size-8 p-0.5" />
 		</div>
 		<div class="translate-y-0.5 pl-2">
 			<span class="text-2xl"> Select </span>
 		</div>
-    </div>
+	</div>
 </div>

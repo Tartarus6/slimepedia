@@ -10,10 +10,10 @@
 	// Initialize audio context on first user interaction to avoid browser warnings
 	const initAudioOnInteraction = () => {
 		soundManager.initializeOnUserGesture();
-		userHasInteracted=true
+		userHasInteracted = true;
 	};
 
-	onMount(() => {		
+	onMount(() => {
 		// Listen for any user interaction to initialize audio
 		// Use capture phase to ensure we catch the event early
 		// Don't use { once: true } because we want to persist across navigation
@@ -30,25 +30,29 @@
 			}
 		};
 	});
-
 </script>
 
 <svelte:head>
 	<title>Slimepedia</title>
 	<link rel="icon" type="image/png" href="/favicon.png" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<meta name="darkreader-lock">
+	<meta name="darkreader-lock" />
 </svelte:head>
-
 
 <div class="grid h-screen w-screen place-content-center justify-items-center">
 	<!-- Interaction request for audio -->
 	{#if !userHasInteracted}
-		<button aria-label="play sound request button" class="absolute z-50 w-full h-full" onmousedown={initAudioOnInteraction} ontouchstart={initAudioOnInteraction} onkeydown={initAudioOnInteraction}>
+		<button
+			aria-label="play sound request button"
+			class="absolute z-50 h-full w-full"
+			onmousedown={initAudioOnInteraction}
+			ontouchstart={initAudioOnInteraction}
+			onkeydown={initAudioOnInteraction}
+		>
 			<div class="flex h-full w-full items-center justify-center">
-				<div class="bg-black opacity-80 p-20 flex flex-col rounded-lg text-center gap-6">
+				<div class="flex flex-col gap-6 rounded-lg bg-black p-20 text-center opacity-80">
 					<span class="text-3xl font-bold text-white!">Press Any Button</span>
-					<span class="text-lg italic text-white">(Required for audio playback)</span>
+					<span class="text-lg text-white italic">(Required for audio playback)</span>
 				</div>
 			</div>
 		</button>
@@ -56,10 +60,10 @@
 
 	<!-- Main page content -->
 	<div
-		class="mx-5 my-10 grid h-[56em] w-[96em] grid-cols-1 grid-rows-1 overflow-y-hidden overflow-x-hidden rounded-page bg-lighter-beige shadow-xl ring-1 ring-slate-900/5"
+		class="rounded-page bg-lighter-beige mx-5 my-10 grid h-[56em] w-[96em] grid-cols-1 grid-rows-1 overflow-x-hidden overflow-y-hidden shadow-xl ring-1 ring-slate-900/5"
 	>
 		<svg
-			class="animate-wave left-0 top-0 z-0 col-start-1 row-start-1 h-full w-[200%]"
+			class="animate-wave top-0 left-0 z-0 col-start-1 row-start-1 h-full w-[200%]"
 			viewBox="0 0 800 250"
 			preserveAspectRatio="none"
 		>
@@ -270,7 +274,7 @@
 			/>
 		</svg>
 		<div class="z-10 col-start-1 row-start-1 h-full w-full px-16 py-8">
-			<div class="grid grid-rows-[1fr_3.5em] h-full w-full overflow-x-visible">
+			<div class="grid h-full w-full grid-rows-[1fr_3.5em] overflow-x-visible">
 				{@render children()}
 			</div>
 		</div>

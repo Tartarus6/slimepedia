@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -56,8 +56,6 @@ jobs:
           echo "📦 Image: ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
           echo ""
           echo "To update on your server, run:"
-          echo "  bash scripts/server-update.sh"
-          echo "or"
           echo "  docker pull ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
-          echo "  docker stop slimepedia && docker rm slimepedia"
-          echo "  docker run -d --name slimepedia --restart unless-stopped -p 3000:3000 ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
+          echo "  docker stop ${{ env.DOCKER_IMAGE_NAME }} && docker rm ${{ env.DOCKER_IMAGE_NAME }}"
+          echo "  docker run -d --name ${{ env.DOCKER_IMAGE_NAME }} --restart unless-stopped -p 3000:3000 ghcr.io/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:latest"
