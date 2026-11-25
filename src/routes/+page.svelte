@@ -156,7 +156,7 @@
 						selectedItem = undefined;
 					}}
 				>
-					<div class="group h-fit w-fit">
+					<div class="group h-full w-full">
 						<div
 							class="grid h-full w-full justify-items-center transition-transform duration-200 ease-[cubic-bezier(.53,1.79,.58,1.05)] {selectedItem &&
 							selectedItem.name === button.name
